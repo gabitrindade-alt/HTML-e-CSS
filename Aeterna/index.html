@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aeterna Beauty — Agendamento</title>
+<meta name="description" content="Sistema de agendamento do salão Aeterna Beauty.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===================== SPRITE DA LOGO (reutilizada no header, hero e rodapé) ===================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="brand-mark" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="48" fill="var(--wine)"/>
+      <circle cx="50" cy="50" r="48" fill="none" stroke="var(--gold)" stroke-width="1.5"/>
+      <circle cx="50" cy="50" r="43" fill="none" stroke="var(--gold)" stroke-width="0.6" opacity="0.6"/>
+      <path d="M50 24 C 44 30 41 36 41 41 C 41 33 35 28 29 27 C 34 31 37 37 37 43" fill="none" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" opacity="0.9"/>
+      <path d="M50 24 C 56 30 59 36 59 41 C 59 33 65 28 71 27 C 66 31 63 37 63 43" fill="none" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" opacity="0.9"/>
+      <text x="50" y="74" text-anchor="middle" font-family="Fraunces, serif" font-style="italic" font-weight="500" font-size="42" fill="var(--gold)">A</text>
+    </symbol>
+    <symbol id="icon-scissors" viewBox="0 0 48 48">
+      <circle cx="14" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      <circle cx="14" cy="36" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      <path d="M18 15 L40 41 M18 33 L40 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="icon-nail" viewBox="0 0 48 48">
+      <path d="M18 6 h12 a2 2 0 0 1 2 2 v10 a14 14 0 0 1 -8 12.6 V42 h-8 v-11.4 A14 14 0 0 1 16 18 V8 a2 2 0 0 1 2 -2 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M16 14 h16" stroke="currentColor" stroke-width="2.2"/>
+    </symbol>
+    <symbol id="icon-brow" viewBox="0 0 48 48">
+      <path d="M6 30 C 12 16, 24 14, 30 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M18 30 C 24 16, 36 14, 42 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="icon-lipstick" viewBox="0 0 48 48">
+      <path d="M18 22 h12 l-3 -12 a3 3 0 0 0 -6 0 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+      <rect x="16" y="22" width="16" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/>
+      <path d="M16 30 h16" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+    <symbol id="icon-sparkle" viewBox="0 0 48 48">
+      <path d="M24 6 L27 20 L41 24 L27 28 L24 42 L21 28 L7 24 L21 20 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="icon-clock" viewBox="0 0 48 48">
+      <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="2.2"/>
+      <path d="M24 14 v10 l8 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-heart" viewBox="0 0 48 48">
+      <path d="M24 40 C 8 29 4 19 11 13 C 16 8.5 22 10 24 16 C 26 10 32 8.5 37 13 C 44 19 40 29 24 40 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="ornament-divider" viewBox="0 0 160 20">
+      <path d="M0 10 H62" stroke="currentColor" stroke-width="1" opacity="0.55"/>
+      <path d="M98 10 H160" stroke="currentColor" stroke-width="1" opacity="0.55"/>
+      <path d="M80 3 L87 10 L80 17 L73 10 Z" fill="currentColor"/>
+      <circle cx="68" cy="10" r="2" fill="currentColor" opacity="0.6"/>
+      <circle cx="92" cy="10" r="2" fill="currentColor" opacity="0.6"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div id="toast-region" class="toast-region" aria-live="polite"></div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <button class="logo" data-nav="home" aria-label="Página inicial">
+      <svg class="logo-mark" viewBox="0 0 100 100"><use href="#brand-mark"/></svg>
+      <span class="logo-text">Aeterna<em>Beauty</em></span>
+    </button>
+
+    <nav class="main-nav" id="main-nav">
+      <button data-nav="home">Início</button>
+      <button data-nav="home" data-scroll="sobre">Sobre</button>
+      <button data-nav="home" data-scroll="services">Serviços</button>
+      <button data-nav="home" data-scroll="professionals">Profissionais</button>
+      <button data-nav="book" class="nav-cta">Agendar</button>
+      <button data-nav="appointments">Meus agendamentos</button>
+      <button data-nav="home" data-scroll="contact">Contato</button>
+      <button data-nav="admin" class="nav-admin">Área administrativa</button>
+    </nav>
+
+    <div class="header-actions">
+      <span id="user-chip" class="user-chip hidden"></span>
+      <button id="btn-login" class="btn btn-ghost">Entrar</button>
+      <button id="btn-register" class="btn btn-primary">Cadastrar</button>
+      <button id="btn-logout" class="btn btn-ghost hidden">Sair</button>
+    </div>
+
+    <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- ===================== HOME ===================== -->
+  <section class="page active" id="page-home" data-page="home">
+
+    <section class="hero">
+      <svg class="hero-watermark" viewBox="0 0 100 100" aria-hidden="true"><use href="#brand-mark"/></svg>
+      <div class="hero-copy">
+        <p class="eyebrow eyebrow-light">Salão Aeterna Beauty</p>
+        <h1>Beleza, <em>no seu</em> tempo.</h1>
+        <p class="hero-sub">Chega de agenda perdida no WhatsApp. Escolha o serviço, a profissional e o horário — sua reserva confirmada em segundos, do jeitinho que você merece.</p>
+        <div class="hero-actions">
+          <button class="btn btn-gold btn-lg" data-nav="book">Agendar horário</button>
+          <button class="btn btn-outline-light btn-lg" data-nav="appointments">Meus agendamentos</button>
+        </div>
+        <dl class="hero-stats">
+          <div><dt data-count="7">0</dt><dd>anos cuidando de você</dd></div>
+          <div><dt data-count="4">0</dt><dd>especialistas</dd></div>
+          <div><dt data-count="13">0</dt><dd>serviços no cardápio</dd></div>
+        </dl>
+      </div>
+
+      <div class="hero-ticket-wrap">
+        <div class="ticket ticket--sample">
+          <div class="ticket-top">
+            <span class="ticket-label">Bilhete de agendamento</span>
+            <span class="ticket-id">Nº 00214</span>
+          </div>
+          <div class="ticket-row"><span>Serviço</span><strong>Corte Feminino</strong></div>
+          <div class="ticket-row"><span>Profissional</span><strong>Ana</strong></div>
+          <div class="ticket-row"><span>Data</span><strong>22 Ago · Sáb</strong></div>
+          <div class="ticket-perf"><span class="notch notch-left"></span><span class="notch notch-right"></span></div>
+          <div class="ticket-row"><span>Horário</span><strong>14:00</strong></div>
+          <div class="ticket-row"><span>Valor</span><strong>R$ 60,00</strong></div>
+          <div class="ticket-stamp">Confirmado</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section perks-strip reveal">
+      <div class="perk">
+        <svg class="perk-icon" viewBox="0 0 48 48"><use href="#icon-clock"/></svg>
+        <h4>Sem espera no WhatsApp</h4>
+        <p>Veja horários livres em tempo real e agende sozinha, a qualquer hora do dia.</p>
+      </div>
+      <div class="perk">
+        <svg class="perk-icon" viewBox="0 0 48 48"><use href="#icon-sparkle"/></svg>
+        <h4>Time especializado</h4>
+        <p>Cada profissional é referência na sua área — do corte à maquiagem.</p>
+      </div>
+      <div class="perk">
+        <svg class="perk-icon" viewBox="0 0 48 48"><use href="#icon-heart"/></svg>
+        <h4>Flexível de verdade</h4>
+        <p>Cancele com até 2h de antecedência e o horário volta a ficar livre.</p>
+      </div>
+      <div class="perk">
+        <svg class="perk-icon" viewBox="0 0 48 48"><use href="#icon-nail"/></svg>
+        <h4>Preço sempre claro</h4>
+        <p>Valor do serviço confirmado antes de você finalizar o agendamento.</p>
+      </div>
+    </section>
+
+    <section class="section sobre-section reveal" id="sobre">
+      <div class="sobre-grid">
+        <div class="sobre-copy">
+          <p class="eyebrow">Nossa história</p>
+          <h2>Um cantinho de cuidado, há 7 anos</h2>
+          <svg class="ornament" viewBox="0 0 160 20"><use href="#ornament-divider"/></svg>
+          <p class="section-note">O Aeterna Beauty nasceu do sonho de criar um espaço onde autocuidado é tratado com carinho e técnica na mesma medida. Cada detalhe do atendimento — do primeiro "oi" até o agendamento do próximo horário — é pensado para você se sentir em casa.</p>
+          <p class="section-note">Hoje, nossa equipe reúne especialistas em cabelo, unhas, sobrancelhas e maquiagem, prontas para cuidar de cada etapa da sua rotina de beleza.</p>
+        </div>
+        <div class="sobre-stats">
+          <div class="sobre-stat"><span data-count="7">0</span><small>anos de história</small></div>
+          <div class="sobre-stat"><span data-count="4">0</span><small>especialistas</small></div>
+          <div class="sobre-stat"><span data-count="1200">0</span><small>clientes atendidas</small></div>
+          <div class="sobre-stat"><span data-count="98">0</span><small>% de aprovação</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal" id="services">
+      <div class="section-head">
+        <p class="eyebrow">Cardápio</p>
+        <h2>Nossos serviços e preços</h2>
+        <svg class="ornament" viewBox="0 0 160 20"><use href="#ornament-divider"/></svg>
+        <div class="services-search">
+          <input type="search" id="services-search" placeholder="Buscar um serviço… (ex: manicure)">
+        </div>
+      </div>
+      <div id="services-list" class="menu-groups"></div>
+    </section>
+
+    <section class="section section-alt gallery-strip reveal" id="categorias">
+      <div class="section-head">
+        <p class="eyebrow">Especialidades</p>
+        <h2>O que cuidamos por aqui</h2>
+      </div>
+      <div class="gallery-grid">
+        <button class="gallery-card" data-filter-category="Cabelo">
+          <svg class="gallery-icon" viewBox="0 0 48 48"><use href="#icon-scissors"/></svg>
+          <h4>Cabelo</h4>
+          <p>Cortes, escova, hidratação, progressiva e coloração.</p>
+        </button>
+        <button class="gallery-card" data-filter-category="Unhas">
+          <svg class="gallery-icon" viewBox="0 0 48 48"><use href="#icon-nail"/></svg>
+          <h4>Unhas</h4>
+          <p>Manicure, pedicure e alongamento com acabamento impecável.</p>
+        </button>
+        <button class="gallery-card" data-filter-category="Sobrancelhas">
+          <svg class="gallery-icon" viewBox="0 0 48 48"><use href="#icon-brow"/></svg>
+          <h4>Sobrancelhas</h4>
+          <p>Design clássico ou com henna, moldando o seu olhar.</p>
+        </button>
+        <button class="gallery-card" data-filter-category="Maquiagem">
+          <svg class="gallery-icon" viewBox="0 0 48 48"><use href="#icon-lipstick"/></svg>
+          <h4>Maquiagem</h4>
+          <p>Produções sociais e para eventos especiais.</p>
+        </button>
+      </div>
+    </section>
+
+    <section class="section reveal" id="professionals">
+      <div class="section-head">
+        <p class="eyebrow">Equipe</p>
+        <h2>Profissionais</h2>
+        <svg class="ornament" viewBox="0 0 160 20"><use href="#ornament-divider"/></svg>
+        <p class="section-note">Cada especialista atende um conjunto próprio de serviços — ao agendar, mostramos apenas quem realiza o serviço escolhido.</p>
+      </div>
+      <div id="professionals-list" class="pro-grid"></div>
+    </section>
+
+    <section class="section section-alt reveal" id="depoimentos">
+      <div class="section-head">
+        <p class="eyebrow">Quem já passou por aqui</p>
+        <h2>Depoimentos</h2>
+      </div>
+      <div class="testimonial-wrap">
+        <button class="testimonial-nav" id="testimonial-prev" aria-label="Depoimento anterior">‹</button>
+        <div id="testimonial-card" class="testimonial-card"></div>
+        <button class="testimonial-nav" id="testimonial-next" aria-label="Próximo depoimento">›</button>
+      </div>
+      <div class="testimonial-dots" id="testimonial-dots"></div>
+    </section>
+
+    <section class="section reveal" id="faq">
+      <div class="section-head">
+        <p class="eyebrow">Dúvidas comuns</p>
+        <h2>Perguntas frequentes</h2>
+        <svg class="ornament" viewBox="0 0 160 20"><use href="#ornament-divider"/></svg>
+      </div>
+      <div class="faq-list" id="faq-list">
+        <details class="faq-item" open>
+          <summary>Como funciona o cancelamento?</summary>
+          <p>Você pode cancelar pelo próprio sistema, em "Meus agendamentos", com até 2 horas de antecedência do horário marcado. Depois desse prazo, o cancelamento não fica mais disponível.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Posso remarcar um horário?</summary>
+          <p>Ainda não há remarcação automática nesta versão. Para trocar de horário, cancele o agendamento atual (respeitando o prazo de 2h) e faça um novo agendamento.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Como sei quem atende cada serviço?</summary>
+          <p>Ao escolher o serviço na etapa de agendamento, o sistema mostra automaticamente apenas as profissionais que realizam aquele serviço específico.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Preciso criar conta para agendar?</summary>
+          <p>Sim — o cadastro garante que você acompanhe seus próprios agendamentos e receba a confirmação com nome e telefone corretos.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="section section-alt contact-strip reveal" id="contact">
+      <div class="section-head">
+        <p class="eyebrow">Fale com a gente</p>
+        <h2>Contato</h2>
+        <svg class="ornament" viewBox="0 0 160 20"><use href="#ornament-divider"/></svg>
+      </div>
+      <div class="contact-grid">
+        <div class="info-card">
+          <h3>Horário de funcionamento</h3>
+          <p class="info-big">Terça a sábado</p>
+          <p class="muted">09:00 às 19:00 · fechado domingo e segunda</p>
+        </div>
+        <a class="info-card info-card-link" href="https://wa.me/5511999998765" target="_blank" rel="noopener">
+          <h3>WhatsApp</h3>
+          <p class="info-big">(11) 99999-8765</p>
+          <p class="muted">Toque para chamar no WhatsApp ↗</p>
+        </a>
+        <a class="info-card info-card-link" href="https://instagram.com/aeternabeauty" target="_blank" rel="noopener">
+          <h3>Instagram</h3>
+          <p class="info-big">@aeternabeauty</p>
+          <p class="muted">Antes e depois, novidades e promoções ↗</p>
+        </a>
+        <div class="info-card">
+          <h3>Endereço</h3>
+          <p class="info-big">Studio Aeterna</p>
+          <p class="muted">Agendamentos somente pelo sistema</p>
+        </div>
+      </div>
+    </section>
+
+  </section>
+
+  <!-- ===================== BOOK ===================== -->
+  <section class="page" id="page-book" data-page="book">
+    <div class="section-head">
+      <p class="eyebrow">Novo agendamento</p>
+      <h2>Monte o seu horário</h2>
+      <svg class="ornament" viewBox="0 0 160 20"><use href="#ornament-divider"/></svg>
+    </div>
+
+    <ol class="stepper" id="stepper">
+      <li data-step="1"><span class="step-num">1</span><span>Serviço</span></li>
+      <li data-step="2"><span class="step-num">2</span><span>Profissional</span></li>
+      <li data-step="3"><span class="step-num">3</span><span>Data</span></li>
+      <li data-step="4"><span class="step-num">4</span><span>Horário</span></li>
+      <li data-step="5"><span class="step-num">5</span><span>Seus dados</span></li>
+    </ol>
+
+    <div class="booking-layout">
+      <div class="booking-panel" id="booking-panel"></div>
+
+      <aside class="booking-ticket-preview">
+        <p class="preview-label">Prévia do bilhete</p>
+        <div class="ticket" id="live-ticket"></div>
+        <div id="booking-confirm-box" class="confirm-box hidden">
+          <button id="btn-confirm-booking" class="btn btn-gold btn-lg btn-block">Confirmar agendamento</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===================== APPOINTMENTS ===================== -->
+  <section class="page" id="page-appointments" data-page="appointments">
+    <div class="section-head">
+      <p class="eyebrow">Sua agenda</p>
+      <h2>Meus agendamentos</h2>
+      <svg class="ornament" viewBox="0 0 160 20"><use href="#ornament-divider"/></svg>
+      <p class="section-note">O cancelamento pode ser feito com até 2 horas de antecedência do horário marcado. Não há remarcação — para trocar o horário, cancele e agende novamente.</p>
+    </div>
+    <div id="appointments-auth-notice" class="notice hidden">
+      Entre ou cadastre-se para ver e gerenciar seus agendamentos.
+      <div class="notice-actions">
+        <button class="btn btn-primary" id="btn-appt-login">Entrar</button>
+        <button class="btn btn-outline" id="btn-appt-register">Cadastrar</button>
+      </div>
+    </div>
+    <div id="appointments-list" class="tickets-list"></div>
+  </section>
+
+  <!-- ===================== ADMIN ===================== -->
+  <section class="page" id="page-admin" data-page="admin">
+
+    <div id="admin-gate" class="admin-gate">
+      <svg class="admin-gate-mark" viewBox="0 0 100 100"><use href="#brand-mark"/></svg>
+      <p class="eyebrow">Acesso restrito</p>
+      <h2>Área administrativa</h2>
+      <p class="section-note" id="admin-gate-text">Esta área é exclusiva para a equipe do Aeterna Beauty. Entre com uma conta administrativa para continuar.</p>
+      <button class="btn btn-gold btn-lg" id="admin-gate-login">Entrar</button>
+    </div>
+
+    <div id="admin-content" class="admin-content hidden">
+      <div class="section-head admin-head">
+        <div>
+          <p class="eyebrow">Painel</p>
+          <h2 id="admin-welcome">Área administrativa</h2>
+        </div>
+        <button class="btn btn-ghost" id="btn-admin-logout">Sair</button>
+      </div>
+
+      <nav class="admin-tabs" id="admin-tabs">
+        <button class="active" data-tab="dashboard">Dashboard</button>
+        <button data-tab="agendamentos">Agendamentos</button>
+        <button data-tab="servicos">Serviços</button>
+        <button data-tab="profissionais">Profissionais</button>
+        <button data-tab="horarios">Horários</button>
+        <button data-tab="clientes">Clientes</button>
+      </nav>
+
+      <div id="admin-panel"></div>
+    </div>
+
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <svg class="logo-mark" viewBox="0 0 100 100"><use href="#brand-mark"/></svg>
+      <span class="logo-text">Aeterna<em>Beauty</em></span>
+      <p class="footer-tag">Beleza, no seu tempo.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Navegação</h5>
+      <button class="link-btn" data-nav="home">Início</button>
+      <button class="link-btn" data-nav="home" data-scroll="services">Serviços</button>
+      <button class="link-btn" data-nav="book">Agendar</button>
+      <button class="link-btn" data-nav="appointments">Meus agendamentos</button>
+    </div>
+    <div class="footer-col">
+      <h5>Salão</h5>
+      <button class="link-btn" data-nav="home" data-scroll="sobre">Sobre nós</button>
+      <button class="link-btn" data-nav="home" data-scroll="contact">Contato</button>
+      <button class="link-btn" data-nav="admin">Área administrativa</button>
+    </div>
+    <div class="footer-col">
+      <h5>Redes sociais</h5>
+      <a href="https://instagram.com/aeternabeauty" target="_blank" rel="noopener">Instagram — @aeternabeauty</a>
+      <a href="https://wa.me/5511999998765" target="_blank" rel="noopener">WhatsApp — (11) 99999-8765</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="footer-year"></span> Aeterna Beauty — Sistema de agendamento</div>
+</footer>
+
+<!-- ===================== MODALS ===================== -->
+<div class="modal-overlay hidden" id="modal-overlay">
+
+  <div class="modal" id="modal-login">
+    <button class="modal-close" data-close-modal>×</button>
+    <svg class="modal-mark" viewBox="0 0 100 100"><use href="#brand-mark"/></svg>
+    <h3>Entrar</h3>
+    <form id="login-form">
+      <label>E-mail ou usuário
+        <input type="text" id="login-email" required autocomplete="username">
+      </label>
+      <label>Senha
+        <input type="password" id="login-password" required autocomplete="current-password">
+      </label>
+      <p class="form-error hidden" id="login-error"></p>
+      <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+      <p class="modal-switch">Ainda não tem conta? <button type="button" data-switch-modal="register">Cadastre-se</button></p>
+    </form>
+  </div>
+
+  <div class="modal" id="modal-register">
+    <button class="modal-close" data-close-modal>×</button>
+    <svg class="modal-mark" viewBox="0 0 100 100"><use href="#brand-mark"/></svg>
+    <h3>Criar conta</h3>
+    <form id="register-form">
+      <label>Nome completo
+        <input type="text" id="register-name" required autocomplete="name">
+      </label>
+      <label>Telefone
+        <input type="tel" id="register-phone" placeholder="(11) 99999-0000" required autocomplete="tel">
+      </label>
+      <label>E-mail
+        <input type="email" id="register-email" required autocomplete="email">
+      </label>
+      <label>Senha
+        <input type="password" id="register-password" minlength="4" required autocomplete="new-password">
+      </label>
+      <p class="form-error hidden" id="register-error"></p>
+      <button class="btn btn-primary btn-block" type="submit">Criar conta</button>
+      <p class="modal-switch">Já tem conta? <button type="button" data-switch-modal="login">Entrar</button></p>
+    </form>
+  </div>
+
+  <div class="modal" id="modal-confirm">
+    <button class="modal-close" data-close-modal>×</button>
+    <h3 id="confirm-title">Confirmar</h3>
+    <p id="confirm-message"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Voltar</button>
+      <button class="btn btn-danger" id="confirm-accept">Confirmar</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="script.js" defer></script>
+</body>
+</html>
