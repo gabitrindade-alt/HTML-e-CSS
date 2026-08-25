@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<!-- ===================== SPRITE DA LOGO (reutilizada no header, hero e rodapé) ===================== -->
+<!-- ===================== SPRITE DA LOGO ===================== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="brand-mark" viewBox="0 0 100 100">
@@ -23,41 +23,14 @@
       <path d="M50 24 C 56 30 59 36 59 41 C 59 33 65 28 71 27 C 66 31 63 37 63 43" fill="none" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" opacity="0.9"/>
       <text x="50" y="74" text-anchor="middle" font-family="Fraunces, serif" font-style="italic" font-weight="500" font-size="42" fill="var(--gold)">A</text>
     </symbol>
-    <symbol id="icon-scissors" viewBox="0 0 48 48">
-      <circle cx="14" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
-      <circle cx="14" cy="36" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
-      <path d="M18 15 L40 41 M18 33 L40 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-    </symbol>
-    <symbol id="icon-nail" viewBox="0 0 48 48">
-      <path d="M18 6 h12 a2 2 0 0 1 2 2 v10 a14 14 0 0 1 -8 12.6 V42 h-8 v-11.4 A14 14 0 0 1 16 18 V8 a2 2 0 0 1 2 -2 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
-      <path d="M16 14 h16" stroke="currentColor" stroke-width="2.2"/>
-    </symbol>
-    <symbol id="icon-brow" viewBox="0 0 48 48">
-      <path d="M6 30 C 12 16, 24 14, 30 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-      <path d="M18 30 C 24 16, 36 14, 42 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-    </symbol>
-    <symbol id="icon-lipstick" viewBox="0 0 48 48">
-      <path d="M18 22 h12 l-3 -12 a3 3 0 0 0 -6 0 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
-      <rect x="16" y="22" width="16" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/>
-      <path d="M16 30 h16" stroke="currentColor" stroke-width="2"/>
-    </symbol>
-    <symbol id="icon-sparkle" viewBox="0 0 48 48">
-      <path d="M24 6 L27 20 L41 24 L27 28 L24 42 L21 28 L7 24 L21 20 Z" fill="currentColor"/>
-    </symbol>
-    <symbol id="icon-clock" viewBox="0 0 48 48">
-      <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="2.2"/>
-      <path d="M24 14 v10 l8 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-    </symbol>
-    <symbol id="icon-heart" viewBox="0 0 48 48">
-      <path d="M24 40 C 8 29 4 19 11 13 C 16 8.5 22 10 24 16 C 26 10 32 8.5 37 13 C 44 19 40 29 24 40 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
-    </symbol>
-    <symbol id="ornament-divider" viewBox="0 0 160 20">
-      <path d="M0 10 H62" stroke="currentColor" stroke-width="1" opacity="0.55"/>
-      <path d="M98 10 H160" stroke="currentColor" stroke-width="1" opacity="0.55"/>
-      <path d="M80 3 L87 10 L80 17 L73 10 Z" fill="currentColor"/>
-      <circle cx="68" cy="10" r="2" fill="currentColor" opacity="0.6"/>
-      <circle cx="92" cy="10" r="2" fill="currentColor" opacity="0.6"/>
-    </symbol>
+    <symbol id="icon-scissors" viewBox="0 0 48 48"><circle cx="14" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="14" cy="36" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M18 15 L40 41 M18 33 L40 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="icon-nail" viewBox="0 0 48 48"><path d="M18 6 h12 a2 2 0 0 1 2 2 v10 a14 14 0 0 1 -8 12.6 V42 h-8 v-11.4 A14 14 0 0 1 16 18 V8 a2 2 0 0 1 2 -2 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M16 14 h16" stroke="currentColor" stroke-width="2.2"/></symbol>
+    <symbol id="icon-brow" viewBox="0 0 48 48"><path d="M6 30 C 12 16, 24 14, 30 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M18 30 C 24 16, 36 14, 42 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="icon-lipstick" viewBox="0 0 48 48"><path d="M18 22 h12 l-3 -12 a3 3 0 0 0 -6 0 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><rect x="16" y="22" width="16" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 30 h16" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="icon-sparkle" viewBox="0 0 48 48"><path d="M24 6 L27 20 L41 24 L27 28 L24 42 L21 28 L7 24 L21 20 Z" fill="currentColor"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 48 48"><circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M24 14 v10 l8 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 48 48"><path d="M24 40 C 8 29 4 19 11 13 C 16 8.5 22 10 24 16 C 26 10 32 8.5 37 13 C 44 19 40 29 24 40 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+    <symbol id="ornament-divider" viewBox="0 0 160 20"><path d="M0 10 H62" stroke="currentColor" stroke-width="1" opacity="0.55"/><path d="M98 10 H160" stroke="currentColor" stroke-width="1" opacity="0.55"/><path d="M80 3 L87 10 L80 17 L73 10 Z" fill="currentColor"/><circle cx="68" cy="10" r="2" fill="currentColor" opacity="0.6"/><circle cx="92" cy="10" r="2" fill="currentColor" opacity="0.6"/></symbol>
   </defs>
 </svg>
 
@@ -82,6 +55,7 @@
     </nav>
 
     <div class="header-actions">
+      <button id="theme-toggle" class="btn btn-ghost icon-btn" aria-label="Alternar modo escuro">🌙</button>
       <span id="user-chip" class="user-chip hidden"></span>
       <button id="btn-login" class="btn btn-ghost">Entrar</button>
       <button id="btn-register" class="btn btn-primary">Cadastrar</button>
@@ -116,19 +90,19 @@
         </dl>
       </div>
 
-      <div class="hero-ticket-wrap">
-        <div class="ticket ticket--sample">
-          <div class="ticket-top">
-            <span class="ticket-label">Bilhete de agendamento</span>
-            <span class="ticket-id">Nº 00214</span>
+      <!-- CARROSSEL DE IMAGENS -->
+      <div class="hero-carousel-wrap">
+        <div class="carousel" id="hero-carousel">
+          <div class="carousel-track" id="carousel-track">
+            <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&h=600&fit=crop" alt="Ambiente do salão"></div>
+            <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&h=600&fit=crop" alt="Manicure profissional"></div>
+            <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&h=600&fit=crop" alt="Maquiagem e beleza"></div>
+            <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&h=600&fit=crop" alt="Cabelo e penteado"></div>
+            <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=800&h=600&fit=crop" alt="Produtos de beleza"></div>
           </div>
-          <div class="ticket-row"><span>Serviço</span><strong>Corte Feminino</strong></div>
-          <div class="ticket-row"><span>Profissional</span><strong>Ana</strong></div>
-          <div class="ticket-row"><span>Data</span><strong>22 Ago · Sáb</strong></div>
-          <div class="ticket-perf"><span class="notch notch-left"></span><span class="notch notch-right"></span></div>
-          <div class="ticket-row"><span>Horário</span><strong>14:00</strong></div>
-          <div class="ticket-row"><span>Valor</span><strong>R$ 60,00</strong></div>
-          <div class="ticket-stamp">Confirmado</div>
+          <button class="carousel-btn prev" id="carousel-prev">‹</button>
+          <button class="carousel-btn next" id="carousel-next">›</button>
+          <div class="carousel-dots" id="carousel-dots"></div>
         </div>
       </div>
     </section>
