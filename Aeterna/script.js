@@ -1,19 +1,73 @@
+/* =========================================================================
+   AETERNA BEAUTY — lógica do sistema
+   =========================================================================
+   ESTRUTURA DE BANCO DE DADOS DE REFERÊNCIA
+   Todo o "DB" abaixo é um objeto em memória que espelha, tabela por tabela,
+   o schema relacional pensado para este sistema. A ideia é que, na hora de
+   ligar isso a um banco de verdade (Postgres, MySQL, Supabase etc.), essas
+   mesmas tabelas e campos sejam usados quase 1:1.
+
+   CREATE TABLE usuarios (
+     id            INTEGER PRIMARY KEY AUTOINCREMENT,
+     nome          VARCHAR(120) NOT NULL,
+     telefone      VARCHAR(20)  NOT NULL,
+     email         VARCHAR(120) NOT NULL UNIQUE,
+     usuario       VARCHAR(60)  UNIQUE,          -- login alternativo (usado pela equipe)
+     senha_hash    VARCHAR(255) NOT NULL,        -- em produção: hash (bcrypt/argon2), nunca texto puro
+     papel         ENUM('cliente','admin') NOT NULL DEFAULT 'cliente',
+     criado_em     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+   );
+
+   CREATE TABLE servicos (
+     id            INTEGER PRIMARY KEY AUTOINCREMENT,
+     categoria     VARCHAR(60)   NOT NULL,
+     nome          VARCHAR(120)  NOT NULL,
+     preco         DECIMAL(10,2) NOT NULL,
+     ativo         BOOLEAN NOT NULL DEFAULT TRUE
+   );
+
+   CREATE TABLE profissionais (
+     id            INTEGER PRIMARY KEY AUTOINCREMENT,
+     nome          VARCHAR(120) NOT NULL,
+     especialidade VARCHAR(120) NOT NULL,
+     ativo         BOOLEAN NOT NULL DEFAULT TRUE
+   );
+
+   CREATE TABLE profissional_servico (            -- relação N:N
+     profissional_id INTEGER NOT NULL REFERENCES profissionais(id),
+     servico_id       INTEGER NOT NULL REFERENCES servicos(id),
+     PRIMARY KEY (profissional_id, servico_id)
+   );
+
+   CREATE TABLE horario_funcionamento (
+     id              INTEGER PRIMARY KEY AUTOINCREMENT,
+     dia_semana      TINYINT NOT NULL,             -- 0=domingo ... 6=sábado
+     aberto          BOOLEAN NOT NULL DEFAULT FALSE,
+     hora_abertura   TINYINT,                       -- hora cheia, ex: 9
+     hora_fechamento TINYINT                        -- hora cheia, ex: 19
+   );
+
+   CREATE TABLE agendamentos (
+     id               INTEGER PRIMARY KEY AUTOINCREMENT,
+     cliente_id       INTEGER REFERENCES usuarios(id),   -- NULL = cliente avulso (cadastrado pela equipe)
+     cliente_nome     VARCHAR(120) NOT NULL,
+     cliente_telefone VARCHAR(20)  NOT NULL,
+     servico_id       INTEGER NOT NULL REFERENCES servicos(id),
+     profissional_id  INTEGER NOT NULL REFERENCES profissionais(id),
+     data             DATE NOT NULL,
+     horario          TIME NOT NULL,
+     valor            DECIMAL(10,2) NOT NULL,
+     status           ENUM('confirmado','cancelado') NOT NULL DEFAULT 'confirmado',
+     criado_em        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     UNIQUE (profissional_id, data, horario)             -- impede conflito de horário
+   );
+   ========================================================================= */
 (function(){
   "use strict";
 
-  /* =========================================================================
-     ESTRUTURA DE BANCO DE DADOS (MOCK EM MEMÓRIA)
-     Estas tabelas espelham EXATAMENTE o schema relacional para futura migração
-     para Postgres, MySQL ou Supabase.
-     
-     TABELAS PRESENTES:
-     1. usuarios            (id, nome, telefone, email, usuario, senha_hash, papel, criado_em)
-     2. servicos            (id, categoria, nome, preco, ativo)
-     3. profissionais       (id, nome, especialidade, ativo)
-     4. profissional_servico (profissional_id, servico_id) -- Tabela de relação N:N
-     5. horario_funcionamento (id, dia_semana, aberto, hora_abertura, hora_fechamento)
-     6. agendamentos        (id, cliente_id, cliente_nome, cliente_telefone, servico_id, profissional_id, data, horario, valor, status, criado_em)
-     ========================================================================= */
+  /* ---------------------------------------------------------
+     "BANCO DE DADOS" EM MEMÓRIA
+  --------------------------------------------------------- */
   const DB = {
     usuarios: [],
     servicos: [],
@@ -33,6 +87,7 @@
   function dbWhere(tabela, pred){ return DB[tabela].filter(pred); }
   function dbDelete(tabela, id){ const i = DB[tabela].findIndex(r => r.id === id); if(i > -1) DB[tabela].splice(i,1); }
 
+  /* Consultas de domínio (equivalentes a JOINs simples) */
   function servicoPorId(id){ return dbFind('servicos', id); }
   function profissionalPorId(id){ return dbFind('profissionais', id); }
   function profissionaisDoServico(servicoId){
@@ -46,23 +101,23 @@
   function horarioDoDia(diaSemana){ return DB.horario_funcionamento.find(h => h.dia_semana === diaSemana); }
 
   /* ---------------------------------------------------------
-     SEED — dados iniciais robustos
+     SEED — dados iniciais (conforme documentação do projeto)
   --------------------------------------------------------- */
   function seedDatabase(){
     const servicosSeed = [
-      ['Cabelo','Corte Feminino', 65], ['Cabelo','Escova Modelada', 50], ['Cabelo','Hidratação Profunda', 60],
-      ['Cabelo','Progressiva', 200], ['Cabelo','Coloração Completa', 180],
-      ['Unhas','Manicure', 35], ['Unhas','Pedicure', 40], ['Unhas','Manicure + Pedicure', 70], ['Unhas','Alongamento em Gel', 130],
-      ['Sobrancelhas','Design Clássico', 40], ['Sobrancelhas','Design com Henna', 55],
-      ['Maquiagem','Maquiagem Social', 120], ['Maquiagem','Maquiagem para Noivas/Eventos', 180],
+      ['Cabelo','Corte feminino',60], ['Cabelo','Escova',45], ['Cabelo','Hidratação',50],
+      ['Cabelo','Progressiva',180], ['Cabelo','Coloração',150],
+      ['Unhas','Manicure',30], ['Unhas','Pedicure',35], ['Unhas','Manicure + Pedicure',60], ['Unhas','Alongamento de unhas',120],
+      ['Sobrancelhas','Design de sobrancelhas',35], ['Sobrancelhas','Design com henna',45],
+      ['Maquiagem','Maquiagem social',100], ['Maquiagem','Maquiagem para eventos',130],
     ];
     servicosSeed.forEach(([categoria, nome, preco]) => dbInsert('servicos', { categoria, nome, preco, ativo:true }));
 
     const profissionaisSeed = [
-      ['Ana','Cabeleireira Master', ['Corte Feminino','Escova Modelada','Hidratação Profunda','Progressiva','Coloração Completa']],
-      ['Beatriz','Nail Designer', ['Manicure','Pedicure','Manicure + Pedicure','Alongamento em Gel']],
-      ['Camila','Designer de Sobrancelhas', ['Design Clássico','Design com Henna']],
-      ['Daniela','Maquiadora Profissional', ['Maquiagem Social','Maquiagem para Noivas/Eventos']],
+      ['Ana','Cabeleireira', ['Corte feminino','Escova','Hidratação','Progressiva','Coloração']],
+      ['Beatriz','Manicure e Nail Designer', ['Manicure','Pedicure','Manicure + Pedicure','Alongamento de unhas']],
+      ['Camila','Designer de Sobrancelhas', ['Design de sobrancelhas','Design com henna']],
+      ['Daniela','Maquiadora', ['Maquiagem social','Maquiagem para eventos']],
     ];
     profissionaisSeed.forEach(([nome, especialidade, servicosNomes]) => {
       const pro = dbInsert('profissionais', { nome, especialidade, ativo:true });
@@ -72,28 +127,29 @@
       });
     });
 
+    // dia_semana: 0=domingo ... 6=sábado — aberto de terça(2) a sábado(6)
     for(let d = 0; d <= 6; d++){
-      const aberto = d >= 2 && d <= 6; // Terça(2) a Sábado(6)
+      const aberto = d >= 2 && d <= 6;
       dbInsert('horario_funcionamento', { dia_semana: d, aberto, hora_abertura: aberto ? 9 : null, hora_fechamento: aberto ? 19 : null });
     }
 
+    // conta administrativa da equipe
     dbInsert('usuarios', {
       nome:'Gaby', telefone:'(11) 90000-0000', email:'gaby@aeternabeauty.com',
       usuario:'gaby', senha_hash:'1234', papel:'admin',
       criado_em: new Date().toISOString(),
     });
 
+    // cliente de demonstração + agendamentos de exemplo
     const demo = dbInsert('usuarios', {
       nome:'Marina Alves', telefone:'(11) 99888-1234', email:'marina@exemplo.com',
       usuario:null, senha_hash:'123456', papel:'cliente',
       criado_em: new Date().toISOString(),
     });
-    
     const upcoming = getUpcomingDates(6);
     const ana = DB.profissionais.find(p => p.nome === 'Ana');
-    const corte = DB.servicos.find(s => s.nome === 'Corte Feminino');
-    const escova = DB.servicos.find(s => s.nome === 'Escova Modelada');
-    
+    const corte = DB.servicos.find(s => s.nome === 'Corte feminino');
+    const escova = DB.servicos.find(s => s.nome === 'Escova');
     if(upcoming[0]) dbInsert('agendamentos', {
       cliente_id: demo.id, cliente_nome: demo.nome, cliente_telefone: demo.telefone,
       servico_id: corte.id, profissional_id: ana.id, data: isoDate(upcoming[0]), horario:'14:00',
@@ -107,7 +163,7 @@
   }
 
   /* ---------------------------------------------------------
-     ESTADO DE SESSÃO / UI
+     ESTADO DE SESSÃO / UI (não é "banco", é só a tela atual)
   --------------------------------------------------------- */
   const state = {
     currentUser: null,
@@ -118,8 +174,13 @@
     adminNewAppt: { clientId:'avulso', name:'', phone:'', serviceId:null, professionalId:null, date:null, time:null },
     servicesFilter: '',
     testimonialIndex: 0,
-    carouselIndex: 0,
   };
+
+  const TESTIMONIALS = [
+    { quote:'Marquei em dois minutos pelo celular e não perdi mais nenhum horário. Muito mais tranquilo que combinar tudo por mensagem.', author:'Beatriz R., cliente há 2 anos' },
+    { quote:'Adoro poder ver o preço de cada serviço antes de agendar. Nunca tem surpresa na hora de pagar.', author:'Juliana M., cliente fiel' },
+    { quote:'A Ana é maravilhosa com cabelo cacheado. O sistema novo deixou tudo mais organizado, recomendo demais.', author:'Camila S., cliente desde 2023' },
+  ];
 
   /* ---------------------------------------------------------
      HELPERS
@@ -144,20 +205,17 @@
     if(!region) return;
     const el = document.createElement('div');
     el.className = 'toast' + (type ? ' ' + type : '');
-    el.innerHTML = type === 'success' ? '✓ ' + msg : (type === 'error' ? '⚠ ' + msg : msg);
+    el.textContent = msg;
     region.appendChild(el);
-    setTimeout(()=>{ 
-      el.style.opacity = '0'; 
-      el.style.transform = 'translateY(10px)';
-      setTimeout(() => el.remove(), 300); 
-    }, 4000);
+    setTimeout(()=>{ el.remove(); }, 4200);
   }
 
   /* ---------------------------------------------------------
-     MODO ESCURO
+     TEMA (MODO ESCURO / CLARO) - ADICIONADO PARA CORRIGIR O MODO ESCURO
   --------------------------------------------------------- */
   function initTheme() {
     const themeToggle = $('#theme-toggle');
+    if (!themeToggle) return;
     const savedTheme = localStorage.getItem('aeterna-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
@@ -172,53 +230,11 @@
   }
 
   /* ---------------------------------------------------------
-     CARROSSEL DE IMAGENS
-  --------------------------------------------------------- */
-  function initCarousel() {
-    const track = $('#carousel-track');
-    const slides = $$('.carousel-slide');
-    const dotsContainer = $('#carousel-dots');
-    if (!track || slides.length === 0) return;
-
-    slides.forEach((_, i) => {
-      const dot = document.createElement('button');
-      dot.setAttribute('aria-label', `Ir para imagem ${i + 1}`);
-      if (i === 0) dot.classList.add('active');
-      dot.addEventListener('click', () => goToSlide(i));
-      dotsContainer.appendChild(dot);
-    });
-
-    function goToSlide(index) {
-      state.carouselIndex = index;
-      track.style.transform = `translateX(-${index * 100}%)`;
-      $$('.carousel-dots button').forEach((dot, i) => {
-        dot.classList.toggle('active', i === index);
-      });
-    }
-
-    $('#carousel-prev').addEventListener('click', () => {
-      const next = (state.carouselIndex - 1 + slides.length) % slides.length;
-      goToSlide(next);
-    });
-
-    $('#carousel-next').addEventListener('click', () => {
-      const next = (state.carouselIndex + 1) % slides.length;
-      goToSlide(next);
-    });
-
-    // Auto-play a cada 6 segundos
-    setInterval(() => {
-      const next = (state.carouselIndex + 1) % slides.length;
-      goToSlide(next);
-    }, 6000);
-  }
-
-  /* ---------------------------------------------------------
-     NAVEGAÇÃO
+     NAVEGAÇÃO ENTRE PÁGINAS
   --------------------------------------------------------- */
   function goToPage(pageId, scrollTo){
     $$('.page').forEach(p => p.classList.toggle('active', p.dataset.page === pageId));
-    window.scrollTo({top:0, behavior: scrollTo ? 'auto' : 'smooth'});
+    try{ window.scrollTo({top:0, behavior: scrollTo ? 'auto' : 'smooth'}); }catch(e){}
     const nav = $('#main-nav'); if(nav) nav.classList.remove('open');
     const toggle = $('#nav-toggle'); if(toggle) toggle.setAttribute('aria-expanded','false');
 
@@ -227,10 +243,12 @@
     if(pageId === 'admin') renderAdmin();
 
     if(scrollTo){
-      setTimeout(()=>{
+      const run = ()=>{
         const el = document.getElementById(scrollTo);
         if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-      }, 100);
+      };
+      if(typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
+      else setTimeout(run, 0);
     }
   }
 
@@ -247,7 +265,7 @@
   });
 
   /* ---------------------------------------------------------
-     AUTENTICAÇÃO
+     AUTENTICAÇÃO — login único (cliente ou administradora)
   --------------------------------------------------------- */
   function refreshAuthUI(){
     const chip = $('#user-chip');
@@ -256,7 +274,7 @@
     const logoutBtn = $('#btn-logout');
     if(!chip || !loginBtn || !registerBtn || !logoutBtn) return;
     if(state.currentUser){
-      const label = state.currentUser.papel === 'admin' ? 'Gaby (Equipe)' : state.currentUser.nome.split(' ')[0];
+      const label = state.currentUser.papel === 'admin' ? 'Gaby (equipe)' : state.currentUser.nome.split(' ')[0];
       chip.textContent = 'Olá, ' + label;
       chip.classList.remove('hidden');
       loginBtn.classList.add('hidden');
@@ -345,7 +363,7 @@
   });
 
   /* ---------------------------------------------------------
-     CONFIRM MODAL
+     CONFIRM MODAL GENÉRICO
   --------------------------------------------------------- */
   function askConfirm(title, message, onAccept){
     $('#confirm-title').textContent = title;
@@ -365,7 +383,7 @@
   --------------------------------------------------------- */
   function animateCount(el){
     const target = Number(el.dataset.count || '0');
-    const duration = 1200;
+    const duration = 900;
     const start = performance.now();
     function tick(now){
       const progress = Math.min(1, (now - start) / duration);
@@ -388,17 +406,17 @@
     }
     const revealObserver = new IntersectionObserver((entries)=>{
       entries.forEach(entry => { if(entry.isIntersecting){ entry.target.classList.add('in-view'); revealObserver.unobserve(entry.target); } });
-    }, { threshold: 0.1 });
+    }, { threshold: 0.12 });
     revealTargets.forEach(el => revealObserver.observe(el));
 
     const countObserver = new IntersectionObserver((entries)=>{
       entries.forEach(entry => { if(entry.isIntersecting){ animateCount(entry.target); countObserver.unobserve(entry.target); } });
-    }, { threshold: 0.3 });
+    }, { threshold: 0.4 });
     countTargets.forEach(el => countObserver.observe(el));
   }
 
   /* ---------------------------------------------------------
-     HOME — SERVIÇOS E PROFISSIONAIS
+     HOME — SERVIÇOS
   --------------------------------------------------------- */
   function renderServicesList(){
     const wrap = $('#services-list');
@@ -430,14 +448,16 @@
   }
 
   $$('[data-filter-category]').forEach(btn => btn.addEventListener('click', ()=>{
+    const cat = btn.dataset.filterCategory;
+    const map = { 'Cabelo':'', 'Unhas':'', 'Sobrancelhas':'', 'Maquiagem':'' };
     if(searchInput){ searchInput.value=''; }
     state.servicesFilter = '';
     renderServicesList();
     goToPage('home');
-    setTimeout(()=>{
+    requestAnimationFrame(()=>{
       const el = document.getElementById('services');
       if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-    }, 100);
+    });
   }));
 
   function renderProfessionalsList(){
@@ -448,10 +468,28 @@
         <h4>${p.nome}</h4>
         <p class="pro-role">${p.especialidade}</p>
         <p class="pro-services">${servicosDoProfissional(p.id).map(s => s.nome).join(' · ')}</p>
-        <button class="btn btn-outline pro-cta" data-nav="book">Agendar com ${p.nome.split(' ')[0]}</button>
+        <button class="btn btn-outline pro-cta" data-nav="book">Agendar</button>
       </div>
     `).join('');
   }
+
+  /* ---------------------------------------------------------
+     DEPOIMENTOS
+  --------------------------------------------------------- */
+  function renderTestimonial(){
+    const card = $('#testimonial-card');
+    const t = TESTIMONIALS[state.testimonialIndex];
+    card.innerHTML = `
+      <p class="testimonial-quote">"${t.quote}"</p>
+      <p class="testimonial-author">${t.author}</p>
+    `;
+    $('#testimonial-dots').innerHTML = TESTIMONIALS.map((_, i) =>
+      `<button class="${i === state.testimonialIndex ? 'active' : ''}" data-dot="${i}" aria-label="Depoimento ${i+1}"></button>`
+    ).join('');
+    $$('[data-dot]').forEach(b => b.addEventListener('click', ()=>{ state.testimonialIndex = Number(b.dataset.dot); renderTestimonial(); }));
+  }
+  $('#testimonial-prev').addEventListener('click', ()=>{ state.testimonialIndex = (state.testimonialIndex - 1 + TESTIMONIALS.length) % TESTIMONIALS.length; renderTestimonial(); });
+  $('#testimonial-next').addEventListener('click', ()=>{ state.testimonialIndex = (state.testimonialIndex + 1) % TESTIMONIALS.length; renderTestimonial(); });
 
   /* ---------------------------------------------------------
      AGENDA — cálculo de disponibilidade
@@ -496,7 +534,7 @@
   }
 
   /* ---------------------------------------------------------
-     BOOKING WIZARD (Funcional e Robusto)
+     BOOKING WIZARD
   --------------------------------------------------------- */
   function resetBooking(){ state.booking = { step:1, serviceId:null, professionalId:null, date:null, time:null }; }
   function bookingIsComplete(){ const b = state.booking; return b.serviceId && b.professionalId && b.date && b.time; }
@@ -516,7 +554,7 @@
     const ticket = $('#live-ticket');
     ticket.innerHTML = `
       <div class="ticket-top">
-        <span class="ticket-label">Bilhete de Agendamento</span>
+        <span class="ticket-label">Bilhete de agendamento</span>
         <span class="ticket-id">Nº ${String(DB._seq.agendamentos).padStart(5,'0')}</span>
       </div>
       <div class="ticket-row"><span>Serviço</span><strong>${svc ? svc.nome : '—'}</strong></div>
@@ -525,7 +563,7 @@
       <div class="ticket-perf"><span class="notch notch-left"></span><span class="notch notch-right"></span></div>
       <div class="ticket-row"><span>Horário</span><strong>${b.time || '—'}</strong></div>
       <div class="ticket-row"><span>Valor</span><strong>${svc ? money(svc.preco) : '—'}</strong></div>
-      ${bookingIsComplete() ? '<div class="ticket-stamp pending">Aguardando Confirmação</div>' : ''}
+      ${bookingIsComplete() ? '<div class="ticket-stamp pending">Aguardando confirmação</div>' : ''}
     `;
     $('#booking-confirm-box').classList.toggle('hidden', !bookingIsComplete());
   }
@@ -539,9 +577,9 @@
     if(b.step === 1){
       const categorias = [...new Set(DB.servicos.map(s => s.categoria))];
       panel.innerHTML = `
-        <h3 class="step-title">1. Escolha o Serviço</h3>
+        <h3 class="step-title">Escolha o serviço</h3>
         ${categorias.map(cat => `
-          <p class="eyebrow" style="margin-top:1.5rem">${cat}</p>
+          <p class="eyebrow" style="margin-top:1rem">${cat}</p>
           <div class="option-grid">
             ${DB.servicos.filter(s => s.categoria === cat).map(s => `
               <button class="option-card ${b.serviceId === s.id ? 'selected' : ''}" data-pick-service="${s.id}">
@@ -565,8 +603,8 @@
     } else if(b.step === 2){
       const options = profissionaisDoServico(b.serviceId);
       panel.innerHTML = `
-        <h3 class="step-title">2. Escolha a Profissional</h3>
-        <p class="section-note" style="margin-bottom:1.5rem">Somente profissionais que realizam “${servicoPorId(b.serviceId).nome}” aparecem aqui.</p>
+        <h3 class="step-title">Escolha a profissional</h3>
+        <p class="section-note" style="margin-bottom:1.2rem">Somente profissionais que realizam “${servicoPorId(b.serviceId).nome}” aparecem aqui.</p>
         <div class="option-grid">
           ${options.map(p => `
             <button class="option-card ${b.professionalId === p.id ? 'selected' : ''}" data-pick-pro="${p.id}">
@@ -593,7 +631,7 @@
     } else if(b.step === 3){
       const dates = getUpcomingDates(14);
       panel.innerHTML = `
-        <h3 class="step-title">3. Escolha a Data</h3>
+        <h3 class="step-title">Escolha a data</h3>
         <div class="date-strip">
           ${dates.map(d => {
             const iso = isoDate(d);
@@ -623,8 +661,8 @@
       const times = getAvailableTimes(b.professionalId, b.date);
       const anyAvailable = times.some(t => !t.disabled);
       panel.innerHTML = `
-        <h3 class="step-title">4. Horários Disponíveis</h3>
-        <p class="section-note" style="margin-bottom:1.5rem">${formatDateLabel(b.date)} · ${profissionalPorId(b.professionalId).nome}</p>
+        <h3 class="step-title">Horários disponíveis</h3>
+        <p class="section-note" style="margin-bottom:1.2rem">${formatDateLabel(b.date)} · ${profissionalPorId(b.professionalId).nome}</p>
         <div class="time-grid">
           ${times.map(t => `<button class="time-pill ${b.time === t.time ? 'selected' : ''}" data-pick-time="${t.time}" ${t.disabled ? 'disabled' : ''}>${t.time}</button>`).join('')}
         </div>
@@ -642,9 +680,9 @@
     } else if(b.step === 5){
       if(!state.currentUser){
         panel.innerHTML = `
-          <h3 class="step-title">5. Seus Dados</h3>
-          <p class="section-note" style="margin-bottom:1.5rem">Entre na sua conta ou cadastre-se para concluir o agendamento de forma segura.</p>
-          <div class="hero-actions" style="justify-content:flex-start">
+          <h3 class="step-title">Seus dados</h3>
+          <p class="section-note" style="margin-bottom:1.4rem">Entre na sua conta ou cadastre-se para concluir o agendamento.</p>
+          <div class="hero-actions">
             <button class="btn btn-primary" id="inline-login">Entrar</button>
             <button class="btn btn-outline" id="inline-register">Cadastrar</button>
           </div>
@@ -657,15 +695,12 @@
         const svc = servicoPorId(b.serviceId);
         const pro = profissionalPorId(b.professionalId);
         panel.innerHTML = `
-          <h3 class="step-title">5. Confirme seus Dados</h3>
+          <h3 class="step-title">Confirme seus dados</h3>
           <div class="booking-form-grid">
             <label>Nome completo <input type="text" id="bk-name" value="${state.currentUser.nome}"></label>
             <label>Telefone <input type="tel" id="bk-phone" value="${state.currentUser.telefone}"></label>
           </div>
-          <p class="section-note" style="margin-top:1.5rem; padding: 1rem; background: var(--primary-tint); border-radius: var(--radius-s); border-left: 4px solid var(--primary-dark);">
-            <strong>${svc.nome}</strong> com ${pro.nome}<br>
-            📅 ${formatDateLabel(b.date)} às ${b.time} · 💰 ${money(svc.preco)}
-          </p>
+          <p class="section-note" style="margin-top:1.4rem">${svc.nome} com ${pro.nome} · ${formatDateLabel(b.date)} às ${b.time} · ${money(svc.preco)}</p>
           <div class="step-nav"><button class="btn btn-ghost" id="step-back">Voltar</button><span></span></div>
         `;
         $('#step-back').addEventListener('click', ()=>{ b.step = 4; renderBooking(); });
@@ -698,7 +733,7 @@
       data: b.date, horario: b.time, valor: svc.preco,
       status:'confirmado', criado_em: new Date().toISOString(),
     });
-    showToast('Agendamento confirmado com sucesso! 🎉', 'success');
+    showToast('Agendamento confirmado! Você já pode vê-lo em "Meus agendamentos".', 'success');
     resetBooking();
     goToPage('appointments');
   });
@@ -720,7 +755,7 @@
       .sort((a,b) => (a.data + a.horario).localeCompare(b.data + b.horario));
 
     if(minhas.length === 0){
-      list.innerHTML = `<p class="empty-note">Você ainda não tem agendamentos. <button class="link-btn" data-nav="book" style="display:inline; font-weight:600; color:var(--primary-dark)">Agendar horário agora</button></p>`;
+      list.innerHTML = `<p class="empty-note">Você ainda não tem agendamentos. <button class="link-btn" data-nav="book" style="display:inline">Agendar horário</button></p>`;
       return;
     }
 
@@ -730,7 +765,7 @@
       return `
       <div class="ticket">
         <div class="ticket-top">
-          <span class="ticket-label">Bilhete de Agendamento</span>
+          <span class="ticket-label">Bilhete de agendamento</span>
           <span class="ticket-id">Nº ${String(a.id).padStart(5,'0')}</span>
         </div>
         <div class="ticket-row"><span>Serviço</span><strong>${svc.nome}</strong></div>
@@ -742,9 +777,9 @@
         <div class="ticket-stamp ${a.status === 'cancelado' ? 'cancelled' : ''}">${a.status === 'cancelado' ? 'Cancelado' : 'Confirmado'}</div>
         ${a.status === 'confirmado' ? `
           <div class="ticket-actions">
-            <button class="btn btn-outline" data-cancel-appt="${a.id}" ${cancellable ? '' : 'disabled'}>Cancelar Agendamento</button>
+            <button class="btn btn-outline" data-cancel-appt="${a.id}" ${cancellable ? '' : 'disabled'}>Cancelar</button>
           </div>
-          ${cancellable ? '' : '<p class="empty-note" style="padding-top:.8rem; font-size:.85rem">Cancelamento indisponível: faltam menos de 2h para o horário.</p>'}
+          ${cancellable ? '' : '<p class="empty-note" style="padding-top:.6rem">Cancelamento indisponível: faltam menos de 2h para o horário.</p>'}
         ` : ''}
       </div>`;
     }).join('');
@@ -753,7 +788,7 @@
       const id = Number(btn.dataset.cancelAppt);
       const appt = dbFind('agendamentos', id);
       const svc = servicoPorId(appt.servico_id), pro = profissionalPorId(appt.profissional_id);
-      askConfirm('Cancelar Agendamento', `Deseja realmente cancelar ${svc.nome} com ${pro.nome} em ${formatDateLabel(appt.data)} às ${appt.horario}?`, ()=>{
+      askConfirm('Cancelar agendamento', `Cancelar ${svc.nome} com ${pro.nome} em ${formatDateLabel(appt.data)} às ${appt.horario}?`, ()=>{
         appt.status = 'cancelado';
         showToast('Agendamento cancelado. O horário voltou a ficar disponível.', 'success');
         renderAppointments();
@@ -778,9 +813,9 @@
     if(!isAdmin){
       const text = $('#admin-gate-text');
       if(state.currentUser && state.currentUser.papel !== 'admin'){
-        text.textContent = `Você está logada como ${state.currentUser.nome}, mas esta conta não tem acesso administrativo.`;
+        text.textContent = `Você está logada como ${state.currentUser.nome}, mas esta conta não tem acesso administrativo. Entre com a conta da equipe.`;
       } else {
-        text.textContent = 'Esta área é exclusiva para a equipe do Aeterna Beauty.';
+        text.textContent = 'Esta área é exclusiva para a equipe do Aeterna Beauty. Entre com uma conta administrativa para continuar.';
       }
       return;
     }
@@ -810,19 +845,19 @@
     const clientes = dbWhere('usuarios', u => u.papel === 'cliente');
     panel.innerHTML = `
       <div class="admin-grid">
-        <div class="stat-card"><div class="stat-num">${confirmados.length}</div><div class="stat-label">Agendamentos Confirmados</div></div>
-        <div class="stat-card"><div class="stat-num">${hoje.length}</div><div class="stat-label">Agendamentos Hoje</div></div>
-        <div class="stat-card"><div class="stat-num">${money(receita)}</div><div class="stat-label">Receita Prevista</div></div>
-        <div class="stat-card"><div class="stat-num">${clientes.length}</div><div class="stat-label">Clientes Cadastradas</div></div>
+        <div class="stat-card"><div class="stat-num">${confirmados.length}</div><div class="stat-label">Agendamentos confirmados</div></div>
+        <div class="stat-card"><div class="stat-num">${hoje.length}</div><div class="stat-label">Agendamentos hoje</div></div>
+        <div class="stat-card"><div class="stat-num">${money(receita)}</div><div class="stat-label">Receita prevista</div></div>
+        <div class="stat-card"><div class="stat-num">${clientes.length}</div><div class="stat-label">Clientes cadastradas</div></div>
       </div>
-      <p class="panel-title">Próximos Agendamentos</p>
+      <p class="panel-title">Próximos agendamentos</p>
       <div class="admin-table-wrap">
         <table class="data-table">
           <thead><tr><th>Cliente</th><th>Serviço</th><th>Profissional</th><th>Data</th><th>Horário</th></tr></thead>
           <tbody>
             ${confirmados.sort((a,b) => (a.data+a.horario).localeCompare(b.data+b.horario)).slice(0,6).map(a => `
               <tr><td>${a.cliente_nome}</td><td>${servicoPorId(a.servico_id).nome}</td><td>${profissionalPorId(a.profissional_id).nome}</td><td>${formatDateLabel(a.data)}</td><td>${a.horario}</td></tr>
-            `).join('') || `<tr><td colspan="5" class="muted" style="text-align:center; padding:2rem">Nenhum agendamento no momento.</td></tr>`}
+            `).join('') || `<tr><td colspan="5" class="muted">Nenhum agendamento no momento.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -832,9 +867,9 @@
   function renderAdminAppointments(panel){
     const rows = [...DB.agendamentos].sort((a,b) => (b.data+b.horario).localeCompare(a.data+a.horario));
     panel.innerHTML = `
-      <p class="panel-title">Novo Agendamento Manual</p>
+      <p class="panel-title">Novo agendamento</p>
       <div id="admin-new-appt-form"></div>
-      <p class="panel-title" style="margin-top:2.5rem">Todos os Agendamentos</p>
+      <p class="panel-title" style="margin-top:2rem">Todos os agendamentos</p>
       <div class="admin-table-wrap">
         <table class="data-table">
           <thead><tr><th>Cliente</th><th>Serviço</th><th>Profissional</th><th>Data</th><th>Horário</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
@@ -850,7 +885,7 @@
                 <td><span class="status-pill ${a.status}">${a.status === 'confirmado' ? 'Confirmado' : 'Cancelado'}</span></td>
                 <td class="row-actions">${a.status === 'confirmado' ? `<button class="btn btn-outline" data-admin-cancel="${a.id}">Cancelar</button>` : '—'}</td>
               </tr>
-            `).join('') || `<tr><td colspan="8" class="muted" style="text-align:center; padding:2rem">Nenhum agendamento registrado.</td></tr>`}
+            `).join('') || `<tr><td colspan="8" class="muted">Nenhum agendamento registrado.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -858,7 +893,7 @@
     $$('[data-admin-cancel]').forEach(btn => btn.addEventListener('click', ()=>{
       const id = Number(btn.dataset.adminCancel);
       const appt = dbFind('agendamentos', id);
-      askConfirm('Cancelar Agendamento', `Cancelar o horário de ${appt.cliente_nome} (${servicoPorId(appt.servico_id).nome})?`, ()=>{
+      askConfirm('Cancelar agendamento', `Cancelar o horário de ${appt.cliente_nome} (${servicoPorId(appt.servico_id).nome})?`, ()=>{
         appt.status = 'cancelado';
         showToast('Agendamento cancelado.', 'success');
         renderAdmin();
@@ -878,7 +913,7 @@
       <form class="admin-form-inline" id="form-admin-new-appt">
         <label>Cliente
           <select id="na-client">
-            <option value="avulso" ${na.clientId === 'avulso' ? 'selected' : ''}>+ Cliente Avulso</option>
+            <option value="avulso" ${na.clientId === 'avulso' ? 'selected' : ''}>+ Cliente avulso (digitar dados)</option>
             ${clientesCadastradas.map(u => `<option value="${u.id}" ${String(na.clientId) === String(u.id) ? 'selected' : ''}>${u.nome}</option>`).join('')}
           </select>
         </label>
@@ -910,7 +945,7 @@
             ${timeOptions.map(t => `<option value="${t.time}" ${t.disabled ? 'disabled' : ''} ${na.time === t.time ? 'selected' : ''}>${t.time}${t.disabled ? ' · ocupado' : ''}</option>`).join('')}
           </select>
         </label>
-        <button class="btn btn-primary" type="submit" style="height: 42px; margin-top: auto;">Adicionar</button>
+        <button class="btn btn-primary" type="submit">Adicionar agendamento</button>
       </form>
     `;
 
@@ -952,12 +987,12 @@
 
   function renderAdminServices(panel){
     panel.innerHTML = `
-      <p class="panel-title">Cadastrar Novo Serviço</p>
+      <p class="panel-title">Cadastrar serviço</p>
       <form class="admin-form-inline" id="form-add-service">
-        <label>Categoria <input type="text" id="new-service-category" placeholder="Ex: Cabelo" required></label>
-        <label>Nome <input type="text" id="new-service-name" placeholder="Ex: Corte Masculino" required></label>
+        <label>Categoria <input type="text" id="new-service-category" placeholder="Cabelo" required></label>
+        <label>Nome <input type="text" id="new-service-name" placeholder="Corte masculino" required></label>
         <label>Preço (R$) <input type="number" min="0" step="0.01" id="new-service-price" placeholder="60" required></label>
-        <button class="btn btn-primary" type="submit" style="height: 42px; margin-top: auto;">Adicionar</button>
+        <button class="btn btn-primary" type="submit">Adicionar</button>
       </form>
       <div class="admin-table-wrap">
         <table class="data-table">
@@ -992,7 +1027,7 @@
     }));
     $$('[data-remove-service]').forEach(btn => btn.addEventListener('click', ()=>{
       const svc = dbFind('servicos', Number(btn.dataset.removeService));
-      askConfirm('Remover Serviço', `Remover "${svc.nome}" do cardápio?`, ()=>{
+      askConfirm('Remover serviço', `Remover "${svc.nome}" do cardápio? Profissionais perderão este serviço na lista.`, ()=>{
         dbDelete('servicos', svc.id);
         DB.profissional_servico = DB.profissional_servico.filter(r => r.servico_id !== svc.id);
         renderAdminServices(panel);
@@ -1005,15 +1040,15 @@
 
   function renderAdminProfessionals(panel){
     panel.innerHTML = `
-      <p class="panel-title">Cadastrar Nova Profissional</p>
+      <p class="panel-title">Cadastrar profissional</p>
       <form class="admin-form-inline" id="form-add-pro">
-        <label>Nome <input type="text" id="new-pro-name" placeholder="Ex: Larissa" required></label>
-        <label>Especialidade <input type="text" id="new-pro-role" placeholder="Ex: Cabeleireira" required></label>
-        <button class="btn btn-primary" type="submit" style="height: 42px; margin-top: auto;">Adicionar</button>
+        <label>Nome <input type="text" id="new-pro-name" placeholder="Larissa" required></label>
+        <label>Especialidade <input type="text" id="new-pro-role" placeholder="Cabeleireira" required></label>
+        <button class="btn btn-primary" type="submit">Adicionar</button>
       </form>
       <div class="admin-table-wrap">
         <table class="data-table">
-          <thead><tr><th>Nome</th><th>Especialidade</th><th>Serviços Realizados</th><th>Ações</th></tr></thead>
+          <thead><tr><th>Nome</th><th>Especialidade</th><th>Serviços realizados</th><th>Ações</th></tr></thead>
           <tbody>
             ${DB.profissionais.map(p => `
               <tr>
@@ -1056,7 +1091,7 @@
     }));
     $$('[data-remove-pro]').forEach(btn => btn.addEventListener('click', ()=>{
       const pro = dbFind('profissionais', Number(btn.dataset.removePro));
-      askConfirm('Remover Profissional', `Remover ${pro.nome} da equipe?`, ()=>{
+      askConfirm('Remover profissional', `Remover ${pro.nome} da equipe?`, ()=>{
         dbDelete('profissionais', pro.id);
         DB.profissional_servico = DB.profissional_servico.filter(r => r.profissional_id !== pro.id);
         renderAdminProfessionals(panel);
@@ -1069,11 +1104,11 @@
   function renderAdminHours(panel){
     const hoursOptions = Array.from({length:15}, (_,i) => i+7);
     panel.innerHTML = `
-      <p class="panel-title">Dias de Atendimento</p>
+      <p class="panel-title">Dias de atendimento</p>
       <div class="days-toggle">
         ${DOW_LABELS.map((label, idx) => `<button class="day-chip ${horarioDoDia(idx) && horarioDoDia(idx).aberto ? 'on' : ''}" data-toggle-day="${idx}">${label}</button>`).join('')}
       </div>
-      <p class="panel-title">Horário de Funcionamento (aplicado aos dias abertos)</p>
+      <p class="panel-title">Horário de funcionamento (aplicado aos dias abertos)</p>
       <div class="hours-row">
         <label>Abertura
           <select id="hours-start">${hoursOptions.map(h => `<option value="${h}">${pad(h)}:00</option>`).join('')}</select>
@@ -1081,7 +1116,7 @@
         <label>Fechamento
           <select id="hours-end">${hoursOptions.map(h => `<option value="${h}">${pad(h)}:00</option>`).join('')}</select>
         </label>
-        <button class="btn btn-primary" id="save-hours" style="height: 42px;">Salvar Horário</button>
+        <button class="btn btn-primary" id="save-hours">Salvar horário</button>
       </div>
       <p class="section-note">Alterações valem para novos agendamentos a partir de agora.</p>
     `;
@@ -1118,7 +1153,7 @@
                 <td>${u.nome}</td><td>${u.telefone}</td><td>${u.email}</td>
                 <td>${dbWhere('agendamentos', a => a.cliente_id === u.id).length}</td>
               </tr>
-            `).join('') || `<tr><td colspan="4" class="muted" style="text-align:center; padding:2rem">Nenhuma cliente cadastrada ainda.</td></tr>`}
+            `).join('') || `<tr><td colspan="4" class="muted">Nenhuma cliente cadastrada ainda.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -1130,12 +1165,11 @@
   --------------------------------------------------------- */
   function init(){
     const yearEl = $('#footer-year'); if(yearEl) yearEl.textContent = new Date().getFullYear();
-    
     seedDatabase();
-    initTheme();         // Inicializa o modo escuro
-    initCarousel();      // Inicializa o carrossel de 5 imagens
+    initTheme(); // <-- ADICIONADO: Inicializa o modo escuro/claro
     renderServicesList();
     renderProfessionalsList();
+    renderTestimonial();
     refreshAuthUI();
     renderAppointments();
     goToPage('home', true);
