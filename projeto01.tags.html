@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tags</title>
+</head>
+<body>
+<!--from
+label
+br
+option
+checkbox
+input
+select
+button
+fieldset
+legend
+datalist
+text
+password
+email
+number
+date
+tel
+radio
+file
+submit
+reset
+id
+name
+required
+placeholder-->
+<h1>Matrícula - Escola Online</h1>
+<fieldset>
+    <legend>Dados Pessoais</legend>
+    <form action="/cadastro" method="post">
+        <label for= nome>Nome Completo:</label>
+<input type="text" id="nome" name = nome>
+    </form>
+<br>
+<label for="nascimento">Data de Nascimento:</label>
+<input type="date" id="nascimento" name = "nascimento:">
+</br>
+
+<br>
+<label for="email">E-mail do Aluno:</label>
+<input type="email" id="E-mail" name="email" placeholder="aluno@exemplo.com">
+<br>
+
+<br>
+<label for="senha">Senha de Acesso:</label>
+<input type="senha" id="Senha" name="senha" placeholder="**********">
+<br>
+
+<br>
+<label for="tel">Telefone de Emergência:</label>
+<input type="tel" id="E-mail" name="tel" placeholder="(00)00000-0000">
+<br>
+</fieldset>
+
+<fieldset>
+<legend>Preferência de Estudo</legend>
+<p>Áreas de Interesse:</p>
+<input type="checkbox" id="Front-end" name="interesses" value="Front-end">
+<label for="Interesses">Front-end</label>
+
+
+<br>
+<input type="checkbox" id="Back-end" name="interesses" value="Back-end">
+<label for="Interesses">Back-end</label>
+
+<br>
+<input type="checkbox" id="Design" name="interesses" value="Design">
+<label for="Interesses">Design</label>
+
+<br>
+<input type="checkbox" id="Dados" name="interesses" value="Dados">
+<label for="Interesses">Dados</label>
+</br>
+<br>
+<label for="conheceu">Como conheceu a escola?</label>
+
+<select name="conheceu">
+    <option value="selecione">Selecione...</option>
+    <option value="Indicação">Indicação</option> 
+    <option value="Indicação">Google</option> 
+    <option value="Indicação">Redes sociais</option> 
+</select>
+</fieldset>
+
+<br>
+<button type="submit">Matrícular</button>
+<button type="submit">Limpar</button>
+</body>
+</html>
