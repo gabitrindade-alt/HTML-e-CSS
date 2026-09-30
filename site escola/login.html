@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Colegio L&#39;Avenir</title>
+    <link rel="icon" type="image/jpeg" href="assets/lavenir-logo.jpeg">
+    <link rel="stylesheet" href="css/style.css?v=20260930-professor-panel-1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="background:var(--navy);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;">
+    <div class="card" style="max-width:28rem;width:100%;text-align:center;">
+        <img class="brand-logo brand-logo-large" src="assets/lavenir-logo.jpeg" alt="Logo oficial do Colégio L'Avenir">
+        <h2 class="font-serif text-2xl font-bold text-navy mb-2" id="loginTitle">Portal do Aluno</h2>
+        <p class="text-sm" style="color:#6b7280;margin-bottom:2rem;" id="loginSubtitle">Acesse com suas credenciais</p>
+
+        <form id="loginForm" onsubmit="return handleLogin(event)">
+            <div class="form-group" style="text-align:left;">
+                <label class="form-label">E-mail</label>
+                <input type="email" id="loginEmail" class="form-input" required>
+            </div>
+            <div class="form-group" style="text-align:left;">
+                <label class="form-label">Senha</label>
+                <input type="password" id="loginSenha" class="form-input" required>
+            </div>
+            <button type="submit" class="btn btn-gold w-full" style="justify-content:center;padding:0.75rem;">
+                <i class="fas fa-sign-in-alt"></i> Acessar Portal
+            </button>
+        </form>
+
+        <a href="cadastro.html?v=20260930-responsavel-link-2" class="btn btn-ghost mt-4" style="margin:1rem auto 0;"><i class="fas fa-user-plus"></i> Criar conta com qualquer e-mail</a>
+        <button onclick="location.href='index.html'" class="btn btn-ghost mt-4" style="margin:1rem auto 0;">
+            <i class="fas fa-arrow-left"></i> Voltar ao site
+        </button>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js?v=20260930-toast-dedupe-1"></script>
+    <script>
+        const tipo = new URLSearchParams(location.search).get('tipo') || 'aluno';
+        const titles = {
+            aluno: ['Portal do Aluno', 'Acesse com seu e-mail'],
+            responsavel: ['Portal do Responsável', 'Acompanhe a vida escolar do seu filho(a)'],
+            professor: ['Portal do Professor', 'Acesse com suas credenciais'],
+            admin: ['Acesso Administrativo', 'Área restrita']
+        };
+        const titulo = titles[tipo] || titles.aluno;
+        document.getElementById('loginTitle').textContent = titulo[0];
+        document.getElementById('loginSubtitle').textContent = titulo[1];
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const botao = document.querySelector('#loginForm button[type="submit"]');
+            if (botao.disabled) return false;
+            botao.disabled = true;
+            const email = document.getElementById('loginEmail').value;
+            const senha = document.getElementById('loginSenha').value;
+            const area = ['admin', 'professor', 'responsavel'].includes(tipo) ? tipo : '';
+            try {
+                const res = await API.post('auth.login', { email, senha, area });
+                if (res.ok) {
+                    toast('Bem-vindo(a), ' + res.data.nome + '!', 'success');
+                    setTimeout(() => location.href = 'dashboard.html', 800);
+                } else {
+                    toast(res.msg, 'error');
+                    botao.disabled = false;
+                }
+            } catch (err) {
+                toast('Não foi possível concluir o login. Verifique a conexão com o servidor.', 'error');
+                botao.disabled = false;
+            }
+            return false;
+        }
+    </script>
+</body>
+</html>
