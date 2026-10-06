@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Colégio L'Avenir</title>
+    <link rel="icon" type="image/jpeg" href="assets/lavenir-logo.jpeg">
+    <link rel="stylesheet" href="css/style.css?v=20261006-academic-cleanup-1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <h2 class="font-serif text-xl font-bold text-navy" id="pageTitle">Início</h2>
+            <div class="flex items-center gap-3">
+                <button class="btn btn-ghost" onclick="navigate('mensagens')" style="position:relative;">
+                    <i class="fas fa-envelope text-lg"></i>
+                    <span id="unreadBadge" class="badge badge-red hidden" style="position:absolute;top:-4px;right:-4px;padding:0 6px;font-size:10px;">0</span>
+                </button>
+                <div style="text-align:right;" class="hidden" id="userInfo">
+                    <p class="text-sm font-bold text-navy" id="userName"></p>
+                    <p class="text-xs" style="color:#6b7280;" id="userRole"></p>
+                </div>
+                <div class="avatar" id="userAvatar">LA</div>
+            </div>
+        </header>
+        <div class="section-content" id="sectionContent">
+            <p>Carregando...</p>
+        </div>
+    </div>
+
+    <div id="modalContainer"></div>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js?v=20260930-responsavel-professor-3"></script>
+    <script src="js/dashboard.js?v=professor-panel-20260930-1"></script>
+    <script src="js/crud.js"></script>
+    <script src="js/notas.js?v=20261006-gradebook-clean-4"></script>
+    <script src="js/frequencia.js?v=20261006-frequency-overall-4"></script>
+    <script src="js/pagamentos.js?v=20261006-status-manual-3"></script>
+    <script src="js/eventos.js?v=20261006-calendar-edit-1"></script>
+    <script src="js/materiais.js?v=20261006-material-status-4"></script>
+    <script src="js/mensagens.js"></script>
+    <script src="js/relatorios.js?v=20261006-payment-report-1"></script>
+    <script src="js/acompanhamento.js"></script>
+    <script src="js/app.js?v=20261006-academic-cleanup-1"></script>
+</body>
+</html>
