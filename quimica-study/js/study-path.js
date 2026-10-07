@@ -1,0 +1,1 @@
+﻿document.querySelectorAll('.topic-chips button').forEach(button=>button.addEventListener('click',()=>{const input=document.querySelector('input[name="preciso"]');if(input){input.value=button.dataset.topic;input.focus();}}));
